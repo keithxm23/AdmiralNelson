@@ -48,51 +48,50 @@ class mainWindow():
 
                 
         def start(self):
-                try:
-                    for y in range(0,self.height+1):
-                        this_visibility_map = np.zeros((self.visibility_map.shape))
-                        seed = (self.x,y)
-                        x=0
-                        while (x < self.width) or (y < self.height):
-    #                        print x, y
-                            cast_ray(seed[0],seed[1],x,0,self.blocks.transpose(),this_visibility_map)
-                            cast_ray(seed[0],seed[1],0,y,self.blocks.transpose(),this_visibility_map)
-                            
-                            cast_ray(seed[0],seed[1],self.width-x,self.height,self.blocks.transpose(),this_visibility_map)
-                            cast_ray(seed[0],seed[1],self.width,self.height-y,self.blocks.transpose(),this_visibility_map)
+            step = 1
+            try:
+                for y in range(0,self.height+1,step):
+                    this_visibility_map = np.zeros((self.visibility_map.shape))
+                    seed = (self.x,y)
+                    x=0
+                    while (x < self.width) or (y < self.height):
+            #                        print x, y
+                        cast_ray(seed[0],seed[1],x,0,self.blocks.transpose(),this_visibility_map)
+                        cast_ray(seed[0],seed[1],0,y,self.blocks.transpose(),this_visibility_map)
                         
-                            if x < self.width: x+=1
-                            if y < self.height: y+=1
-                        self.visibility_map = np.add(self.visibility_map, this_visibility_map)   
+                        cast_ray(seed[0],seed[1],self.width-x,self.height,self.blocks.transpose(),this_visibility_map)
+                        cast_ray(seed[0],seed[1],self.width,self.height-y,self.blocks.transpose(),this_visibility_map)
                     
-                    
-
-                    
-                    
-                    self.times+=1
-#                    if self.times%33==0:
-#                            print "%.02f FPS"%(self.times/(time.clock()-self.timestart))
-                    if self.x < self.width: 
-                        self.x+=1
-                        self.root.after(1,self.start)
-                    else:
-                        max = np.amax(self.visibility_map)
-    #                    print max
-                        tmp = self.visibility_map/max
-                        self.im = Image.fromarray(np.uint8(cm.gist_heat(tmp.transpose())*255))
-                        self.im.putpixel(seed,(0,0,255))
-                        
-                        newy, newx = self.blocks.shape
-                        scale = 8
-                        self.im = self.im.resize((newx*scale, newy*scale))
-                        
-                        self.photo = ImageTk.PhotoImage(image=self.im)
-                        self.canvas.create_image(0,0,image=self.photo,anchor=Tkinter.NW)
-                        self.root.update()
-                except Exception as e:
-                    
-                    print e
-                    self.root.after(10,self.start)
+                        if x < self.width: x+=1
+                        if y < self.height: y+=1
+                    self.visibility_map = np.add(self.visibility_map, this_visibility_map)   
+                
+                
+                max = np.amax(self.visibility_map)
+            #                    print max
+                tmp = self.visibility_map/max
+                self.im = Image.fromarray(np.uint8(cm.gist_heat(tmp.transpose())*255))
+                self.im.putpixel(seed,(0,0,255))
+                
+                newy, newx = self.blocks.shape
+                scale = 8
+                self.im = self.im.resize((newx*scale, newy*scale))
+                
+                self.photo = ImageTk.PhotoImage(image=self.im)
+                self.canvas.create_image(0,0,image=self.photo,anchor=Tkinter.NW)
+                self.root.update()
+                
+                
+                self.times+=1
+            #                    if self.times%33==0:
+            #                            print "%.02f FPS"%(self.times/(time.clock()-self.timestart))
+                if self.x < self.width: 
+                    self.x+=step
+                    self.root.after(0,self.start)
+            except Exception as e:
+                
+                print e
+                self.root.after(10,self.start)
 
 if __name__ == '__main__':
     x=mainWindow()
