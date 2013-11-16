@@ -1,3 +1,8 @@
+"""
+Credits to Scott W Harden for parts of this script.
+http://www.swharden.com/blog/2010-06-24-fast-tk-pixelmap-generation-from-2d-numpy-arrays-in-python/
+"""
+
 import Tkinter
 from PIL import Image, ImageTk
 from pylab import cm
@@ -32,7 +37,8 @@ class mainWindow():
                             elif blocks[a][b] == 1.0:
                                 blocks[a][b] = 0.5
                     
-                    blocks = np.array(blocks).transpose()
+                    blocks = np.array(blocks)
+                    blocks = blocks.transpose()
                     self.im = Image.fromarray(np.uint8(cm.gist_yarg(blocks)*255))
                     
                     #Set bot positions
