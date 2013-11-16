@@ -66,19 +66,7 @@ class mainWindow():
                         self.visibility_map = np.add(self.visibility_map, this_visibility_map)   
                     
                     
-                    max = np.amax(self.visibility_map)
-#                    print max
-                    tmp = self.visibility_map/max
-                    self.im = Image.fromarray(np.uint8(cm.gist_heat(tmp.transpose())*255))
-                    self.im.putpixel(seed,(0,0,255))
-                    
-                    newy, newx = self.blocks.shape
-                    scale = 8
-                    self.im = self.im.resize((newx*scale, newy*scale))
-                    
-                    self.photo = ImageTk.PhotoImage(image=self.im)
-                    self.canvas.create_image(0,0,image=self.photo,anchor=Tkinter.NW)
-                    self.root.update()
+
                     
                     
                     self.times+=1
@@ -87,6 +75,20 @@ class mainWindow():
                     if self.x < self.width: 
                         self.x+=1
                         self.root.after(1,self.start)
+                    else:
+                        max = np.amax(self.visibility_map)
+    #                    print max
+                        tmp = self.visibility_map/max
+                        self.im = Image.fromarray(np.uint8(cm.gist_heat(tmp.transpose())*255))
+                        self.im.putpixel(seed,(0,0,255))
+                        
+                        newy, newx = self.blocks.shape
+                        scale = 8
+                        self.im = self.im.resize((newx*scale, newy*scale))
+                        
+                        self.photo = ImageTk.PhotoImage(image=self.im)
+                        self.canvas.create_image(0,0,image=self.photo,anchor=Tkinter.NW)
+                        self.root.update()
                 except Exception as e:
                     
                     print e
