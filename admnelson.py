@@ -11,8 +11,9 @@ from api import orders
 from api.vector2 import Vector2
 
 import cPickle as pickle
+#from visibility import get_visibility_map
 
-class PlaceholderCommander(Commander):
+class AdmNelson(Commander):
     """
     Rename and modify this class to create your own commander and add mycmd.Placeholder
     to the execution command you use to run the competition.
@@ -23,6 +24,9 @@ class PlaceholderCommander(Commander):
         self.verbose = True    # display the order descriptions next to the bot labels
         self.gamedata = {}  # stores game state to be pickled later and used by visualize.py
         self.gamedata['blockHeights'] = self.level.blockHeights
+
+        #TODO once you figure out how to import numpy and scipy here, directly call functions instead of using pickles as intermediary
+        #self.gamedata['visibility_map'] = get_visibility_map(self.level.blockHeights)
 
     def tick(self):
         """Override this function for your own bots.  Here you can access all the information in self.game,

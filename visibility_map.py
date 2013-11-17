@@ -3,6 +3,10 @@ Credits to Scott W Harden for parts of this script.
 http://www.swharden.com/blog/2010-06-24-fast-tk-pixelmap-generation-from-2d-numpy-arrays-in-python/
 """
 
+
+"""
+Initial script to display visibility heat map building in real time..
+"""
 import Tkinter
 from PIL import Image, ImageTk
 from pylab import cm

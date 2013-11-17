@@ -10,6 +10,10 @@ import numpy as np
 import time
 import cPickle as pickle
 
+
+"""
+Script to show real time state of the map with bot locations
+"""
 class mainWindow():
         times=1
         timestart=time.clock()
