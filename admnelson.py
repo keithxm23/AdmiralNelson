@@ -13,6 +13,7 @@ from api.vector2 import Vector2
 import cPickle as pickle
 #from visibility import get_visibility_map
 
+
 class AdmNelson(Commander):
     """
     Rename and modify this class to create your own commander and add mycmd.Placeholder

@@ -17,8 +17,21 @@ Script to show real time state of the map with bot locations
 class mainWindow():
         times=1
         timestart=time.clock()
-       
+
         def __init__(self):
+
+                from a_star import astar, vis_map
+                self.astar = astar
+                self.astar.process()
+                self.vis_map = vis_map
+                self.curr = astar.end
+                self.starttile = astar.start
+
+                blocks = np.array(self.vis_map)
+                self.blocks = blocks.transpose()
+                self.im = Image.fromarray(np.uint8(cm.gist_yarg(self.blocks)*255))
+
+
                 self.root = Tkinter.Tk()
                 self.frame = Tkinter.Frame(self.root, width=1024, height=768)
                 self.frame.pack()
@@ -26,33 +39,17 @@ class mainWindow():
                 self.canvas.place(x=-2,y=-2)
                 self.root.after(0,self.start) # INCREASE THE 0 TO SLOW IT DOWN
                 self.root.mainloop()
-                
-        def start(self):
-                
-                try:
-                    gamedata = pickle.load(open('C:/gamedata.p', 'rb'))
-                    blocks = gamedata['blockHeights']
-                    
-                    #normalize block heights
-                    for a,x in enumerate(blocks):
-                        for b,y in enumerate(x):
-                            if blocks[a][b] > 1.0:
-                                blocks[a][b] = 1.0
-                            elif blocks[a][b] == 1.0:
-                                blocks[a][b] = 0.5
-                    
-                    blocks = np.array(blocks)
-                    blocks = blocks.transpose()
-                    self.im = Image.fromarray(np.uint8(cm.gist_yarg(blocks)*255))
-                    
-                    #Set bot positions
-                    for pos in gamedata['bot_positions']:
-                        self.im.putpixel(pos,(255,0,0))
 
-                    newy, newx = blocks.shape
+        def start(self):
+                try:
+                    while self.curr is not self.starttile:
+                        self.im.putpixel((self.curr.x, self.curr.y),(255,0,0))
+                        self.curr = self.curr.parent
+
+                    newy, newx = self.blocks.shape
                     scale = 8
                     self.im = self.im.resize((newx*scale, newy*scale))
-                    
+
                     self.photo = ImageTk.PhotoImage(image=self.im)
                     self.canvas.create_image(0,0,image=self.photo,anchor=Tkinter.NW)
                     self.root.update()
@@ -61,7 +58,7 @@ class mainWindow():
                             print "%.02f FPS"%(self.times/(time.clock()-self.timestart))
                     self.root.after(10,self.start)
                 except Exception as e:
-                    
+
                     print e
                     self.root.after(10,self.start)
 
