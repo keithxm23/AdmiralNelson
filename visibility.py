@@ -10,11 +10,11 @@ def normalize(x):
     else:
         return 0.0
 
-#TODO once you figure out how to import numpy and scipy here, directly call functions instead of using pickles as intermediary
 def get_visibility_map(blockHeights):
-    gamedata = pickle.load(open('C:/gamedata.p', 'rb'))
-    blockHeights = gamedata['blockHeights']
-
+    """
+    Given the blockHeights -> list of lists
+    Returns visibility_map -> 2d numpy array
+    """
     width = len(blockHeights)
     height = len(blockHeights[0])
 

@@ -39,9 +39,6 @@ class AStar(object):
                     reachable = True
                 self.cells.append(Cell(x, y, reachable, visibility_map[x][y]))
 
-        self.start = self.get_cell(11, 12)
-        self.end = self.get_cell(16, 44)
-
 
     def get_heuristic(self, cell):
         """
@@ -95,11 +92,19 @@ class AStar(object):
 
 
     def display_path(self):
+        """
+        Returns a list of (x,y) coordinates which lie in path to destination
+        """
+        path = []
         cell = self.end
+        path.append((cell.x, cell.y))
         while cell.parent is not self.start:
             cell = cell.parent
-            print 'path: cell: %d,%d' % (cell.x, cell.y)
+            path.append((cell.x, cell.y))
+            #print 'path: cell: %d,%d' % (cell.x, cell.y)
 
+        path.reverse()
+        return path
 
     def update_cell(self, adj, cell):
         """
@@ -114,7 +119,13 @@ class AStar(object):
         adj.f = adj.h + adj.g
 
 
-    def process(self):
+    def get_path(self, startx, starty, endx, endy):
+        path = []
+        if startx == endx and starty == endy:
+            return path
+
+        self.start = self.get_cell(startx, starty)
+        self.end = self.get_cell(endx, endy)
         # add starting cell to open heap queue
         heapq.heappush(self.op, (self.start.f, self.start))
         while len(self.op):
@@ -125,7 +136,7 @@ class AStar(object):
             self.cl.add(cell)
             # if ending cell, display found path
             if cell is self.end:
-                self.display_path()
+                path = self.display_path()
                 break
             # get adjacent cells for cell
             adj_cells = self.get_adjacent_cells(cell)
@@ -141,6 +152,14 @@ class AStar(object):
                         self.update_cell(c, cell)
                         # add adj cell to open list
                         heapq.heappush(self.op, (c.f, c))
+
+        #Reset for next search
+        self.op = []        #Open List
+        heapq.heapify(self.op)
+        self.cl = set()     #Closed List
+
+        return path
+
 
 import cPickle as pickle
 from visibility import get_visibility_map

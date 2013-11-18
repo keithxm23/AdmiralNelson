@@ -5,7 +5,8 @@ http://www.swharden.com/blog/2010-06-24-fast-tk-pixelmap-generation-from-2d-nump
 
 
 """
-Initial script to display visibility heat map building in real time..
+Initial Tkinter script to display visibility heat map building in real time..
+NOT to be used in any way for production bots
 """
 import Tkinter
 from PIL import Image, ImageTk
