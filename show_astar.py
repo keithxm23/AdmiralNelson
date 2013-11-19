@@ -29,34 +29,40 @@ class mainWindow():
                 gamedata = pickle.load(open('C:/gamedata.p', 'rb'))
                 blockHeights = gamedata['blockHeights']
                 vis_map = get_visibility_map(blockHeights)
-                astar = AStar(blockHeights, vis_map.tolist())
-                start_point = (12,12)
-                end_point = (22,25)
-                path = astar.get_path(start_point[0],start_point[1],end_point[0],end_point[1])
+                self.astar = AStar(blockHeights, vis_map.tolist())
+                self.start_point = (0,0)
+
                 self.vis_map = vis_map
-                self.curr = astar.end
-                self.starttile = astar.start
 
                 blocks = np.array(self.vis_map)
                 self.blocks = blocks.transpose()
-                self.im = Image.fromarray(np.uint8(cm.gist_yarg(self.blocks)*255))
 
-                self.im.putpixel(start_point,(0,255,0))
-                for x in path:
-                    self.im.putpixel((x[0], x[1]),(255,0,0))
-                self.im.putpixel(end_point,(0,0,255))
-
+                self.end_point = (40,25)
 
                 self.root = Tkinter.Tk()
                 self.frame = Tkinter.Frame(self.root, width=1024, height=768)
                 self.frame.pack()
                 self.canvas = Tkinter.Canvas(self.frame, width=1024,height=768)
                 self.canvas.place(x=-2,y=-2)
-                self.root.after(0,self.start) # INCREASE THE 0 TO SLOW IT DOWN
+                self.root.after(100,self.start) # INCREASE THE 0 TO SLOW IT DOWN
                 self.root.mainloop()
 
         def start(self):
                 try:
+                    self.im = Image.fromarray(np.uint8(cm.gist_yarg(self.blocks)*255))
+
+                    if self.start_point[0] < self.blocks.shape[1]-1:
+                        self.start_point = (self.start_point[0]+1, self.start_point[1])
+
+                    path = self.astar.get_path(self.start_point[0],
+                                      self.start_point[1],
+                                      self.end_point[0],
+                                      self.end_point[1])
+
+                    self.im.putpixel(self.start_point,(0,255,0))
+                    for x in path:
+                        self.im.putpixel((x[0], x[1]),(255,0,0))
+                    self.im.putpixel(self.end_point,(0,0,255))
 
                     newy, newx = self.blocks.shape
                     scale = 8
@@ -68,7 +74,7 @@ class mainWindow():
                     self.times+=1
                     if self.times%33==0:
                             print "%.02f FPS"%(self.times/(time.clock()-self.timestart))
-                    self.root.after(10,self.start)
+                    self.root.after(2000,self.start)
                 except Exception as e:
 
                     print e
