@@ -4,6 +4,8 @@ http://www.laurentluce.com/posts/solving-mazes-using-python-simple-recursivity-a
 
 import heapq
 
+gameplayDataFilepath = "AdmiralNelson/GameplayData/gamedata.p"
+
 class Cell(object):
     def __init__(self, x, y, reachable, g):
         """
