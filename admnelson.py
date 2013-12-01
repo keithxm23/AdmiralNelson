@@ -15,6 +15,8 @@ from visibility import get_visibility_map
 from a_star import AStar
 import time
 
+from game_constants import gameplayDataFilepath
+
 class AdmNelson(Commander):
     """
     Rename and modify this class to create your own commander and add mycmd.Placeholder
@@ -34,7 +36,7 @@ class AdmNelson(Commander):
         which includes game information, and self.level which includes information about the level."""
 
         #Save the game state to a pickle so that it can be used by visualize.py
-        output = open("C:/gamedata.p", "wb")
+        output = open(gameplayDataFilepath, "wb")
         self.gamedata['bot_positions'] = []
         for b in self.game.bots_alive:
             self.gamedata['bot_positions'].append((int(round(b.position.x)), int(round(b.position.y))))

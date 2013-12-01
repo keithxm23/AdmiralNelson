@@ -3,8 +3,7 @@ http://www.laurentluce.com/posts/solving-mazes-using-python-simple-recursivity-a
 """
 
 import heapq
-
-gameplayDataFilepath = "AdmiralNelson/GameplayData/gamedata.p"
+from game_constants import gameplayDataFilepath
 
 class Cell(object):
     def __init__(self, x, y, reachable, g):
@@ -165,7 +164,7 @@ class AStar(object):
 
 import cPickle as pickle
 from visibility import get_visibility_map
-gamedata = pickle.load(open('C:/gamedata.p', 'rb'))
+gamedata = pickle.load(open(gameplayDataFilepath, 'rb'))
 blockHeights = gamedata['blockHeights']
 vis_map = get_visibility_map(blockHeights)
 astar = AStar(blockHeights, vis_map.tolist())
