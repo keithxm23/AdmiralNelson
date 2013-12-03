@@ -1,7 +1,7 @@
 import networkx as nx
 from visibility_wave import VisibilityWave
 
-lambda_const = 0.2
+lambda_const = 0.5
 
 class ProbOccurenceMap():
     """
@@ -43,8 +43,8 @@ class ProbOccurenceMap():
             """ Returns a list of nodes in all 8 directions from the given node """
             x, y = self.getCood(nodeId)
             neighbouringNodes = []
-            for xoffset in range(-1, 1):
-                for yoffset in range(-1, 1):
+            for xoffset in range(-1, 2):
+                for yoffset in range(-1, 2):
                     if xoffset == 0 and yoffset == 0:
                         continue
                     xn = x + xoffset
@@ -57,6 +57,7 @@ class ProbOccurenceMap():
         for nodeId in self.g:
             neighbouringNodes = getNeighbouringNodes(nodeId)
             navigatableNodes = filter(isNavigabaleNode, neighbouringNodes)
+            print nodeId, len(navigatableNodes)
             self.g.add_edges_from([(nodeId, navigatableNode) for navigatableNode in navigatableNodes])
 
 
@@ -64,9 +65,11 @@ class ProbOccurenceMap():
         def update(visibleNodes, visibleEnemyNodes):
             """ Will spread probabities around the graph """
             newProb = [0] * len(self.prob)
+            #print self.g.neighbors(87)
             for nodeId in self.g:
                 neighbouringNodes = self.g.neighbors(nodeId)
-                neighbouringProb = (lambda_const / 8.0) * sum([self.prob[nodeId] for nodeId in neighbouringNodes])
+                denom = 1 if len(neighbouringNodes) == 0 else len(neighbouringNodes)
+                neighbouringProb = (lambda_const / denom) * sum([self.prob[nodeId] for nodeId in neighbouringNodes])
                 selfProb = (1.0 - lambda_const) * self.prob[nodeId]
                 newProb[nodeId] = selfProb + neighbouringProb
             self.prob = newProb
@@ -77,10 +80,12 @@ class ProbOccurenceMap():
                 self.prob[nodeId] = 1.0
 
         self.visibleNodes = []
-        map(self.visibility_wave.compute, self.team.members) # This call will update self.visibleNodes using a callback
+        map(self.visibility_wave.compute, [bot for bot in self.team.members if bot.state != 9]) # This call will update self.visibleNodes using a callback
 
         # TODO Revaluate if last know positions or current visible position to be used for pom
-        visibleEnemyNodeVectors = [enemyBot.position for enemyBot in self.enemyTeam.members]
+        #[enemyBot.position for enemyBot in teamBot.seenBy for teamBot in self.team.members]
+
+        visibleEnemyNodeVectors = [enemyBot.position for enemyBot in self.enemyTeam.members if enemyBot.seenlast == 0.0 and enemyBot.state != 9]
         visibleEnemyNodes = [self.getNodeId(int(vec.x), int(vec.y)) for vec in visibleEnemyNodeVectors]
 
         update(self.visibleNodes, visibleEnemyNodes)

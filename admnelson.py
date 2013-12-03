@@ -32,14 +32,18 @@ class AdmNelson(Commander):
         self.gamedata['visibility_map'] = get_visibility_map(self.level.blockHeights)
         self.astar = AStar(self.gamedata['blockHeights'], self.gamedata['visibility_map'].tolist())
         self.pom = ProbOccurenceMap(self.level.blockHeights, self.game.team, self.game.enemyTeam)
+        self.gamedata['probOccMap'] = self.pom.prob
 
     def tick(self):
         """Override this function for your own bots.  Here you can access all the information in self.game,
         which includes game information, and self.level which includes information about the level."""
 
+        self.pom.tick()
+
         #Save the game state to a pickle so that it can be used by visualize.py
         output = open(gameplayDataFilepath, "wb")
         self.gamedata['bot_positions'] = []
+        self.gamedata['probOccMap'] = self.pom.prob
         
         #print self.level.fieldOfViewAngles
         #print self.level.botSpawnAreas
@@ -58,12 +62,12 @@ class AdmNelson(Commander):
             if bot.flag:
                 # if a bot has the flag run to the scoring location
                 flagScoreLocation = self.game.team.flagScoreLocation
-                self.issue(orders.Charge, bot, flagScoreLocation, description = 'Run to score location')
+                self.issue(orders.Move, bot, flagScoreLocation, description = 'Run to score location')
             else:
                 # otherwise run to where the flag is
                 enemyFlag = self.game.enemyTeam.flag.position
-                self.issue(orders.Charge, bot, enemyFlag, description = 'Run to enemy flag')
-        self.pom.tick()
+                self.issue(orders.Move, bot, enemyFlag, description = 'Run to enemy flag')
+        
 
     def shutdown(self):
         """Use this function to teardown your bot after the game is over, or perform an
