@@ -9,7 +9,7 @@ from pylab import cm
 import numpy as np
 import time
 import cPickle as pickle
-
+from game_constants import gameplayDataFilepath
 
 """
 Script to show real time state of the map with bot locations
@@ -30,7 +30,7 @@ class mainWindow():
         def start(self):
                 
                 try:
-                    gamedata = pickle.load(open('C:/gamedata.p', 'rb'))
+                    gamedata = pickle.load(open(gameplayDataFilepath, 'rb'))
                     blocks = gamedata['blockHeights']
                     
                     #normalize block heights
