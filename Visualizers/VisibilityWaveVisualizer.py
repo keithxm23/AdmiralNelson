@@ -43,23 +43,21 @@ class mainWindow():
                     
                     blocks = np.array(blocks)
                     blocks = blocks.transpose()
-                    #self.im = Image.fromarray(np.uint8(cm.gist_yarg(blocks)*255))
+                    #
                     
                     mapWidth = len(blocks)
                     mapHeight = len(blocks[0])
-                    probOccMap = gamedata['probOccMap']
 
 
+                    visibleNodeIds = gamedata['visibleNodes']
+                    visibleNodes = map(lambda id: ((id % mapWidth), (id / mapWidth)), visibleNodeIds)
 
-                    probOccMap = np.array(probOccMap).reshape(mapWidth, mapHeight)
-                    probOccMap += 0.2 * blocks
-                     
-
-                    #probOccMap[11,7] = 0.3
+                    for x, y in visibleNodes:
+                        blocks[x][y] = 0.2
 
 
-                    self.im = Image.fromarray(np.uint8(cm.gist_yarg(probOccMap)*255))
-
+                    self.im = Image.fromarray(np.uint8(cm.gist_yarg(blocks)*255))
+                    
                     #print mapWidth, mapHeight
                     #print probOccMap
                     #print probOccMap.shape

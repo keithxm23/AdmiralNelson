@@ -57,7 +57,7 @@ class ProbOccurenceMap():
         for nodeId in self.g:
             neighbouringNodes = getNeighbouringNodes(nodeId)
             navigatableNodes = filter(isNavigabaleNode, neighbouringNodes)
-            print nodeId, len(navigatableNodes)
+            #print nodeId, len(navigatableNodes)
             self.g.add_edges_from([(nodeId, navigatableNode) for navigatableNode in navigatableNodes])
 
 
@@ -68,7 +68,7 @@ class ProbOccurenceMap():
             #print self.g.neighbors(87)
             for nodeId in self.g:
                 neighbouringNodes = self.g.neighbors(nodeId)
-                denom = 1 if len(neighbouringNodes) == 0 else len(neighbouringNodes)
+                denom = 1.0 if len(neighbouringNodes) == 0 else len(neighbouringNodes)
                 neighbouringProb = (lambda_const / denom) * sum([self.prob[nodeId] for nodeId in neighbouringNodes])
                 selfProb = (1.0 - lambda_const) * self.prob[nodeId]
                 newProb[nodeId] = selfProb + neighbouringProb

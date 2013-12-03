@@ -44,6 +44,7 @@ class AdmNelson(Commander):
         output = open(gameplayDataFilepath, "wb")
         self.gamedata['bot_positions'] = []
         self.gamedata['probOccMap'] = self.pom.prob
+        self.gamedata['visibleNodes'] = self.pom.visibleNodes
         
         #print self.level.fieldOfViewAngles
         #print self.level.botSpawnAreas
@@ -62,11 +63,11 @@ class AdmNelson(Commander):
             if bot.flag:
                 # if a bot has the flag run to the scoring location
                 flagScoreLocation = self.game.team.flagScoreLocation
-                self.issue(orders.Move, bot, flagScoreLocation, description = 'Run to score location')
+                self.issue(orders.Charge, bot, flagScoreLocation, description = 'Run to score location')
             else:
                 # otherwise run to where the flag is
                 enemyFlag = self.game.enemyTeam.flag.position
-                self.issue(orders.Move, bot, enemyFlag, description = 'Run to enemy flag')
+                self.issue(orders.Charge, bot, enemyFlag, description = 'Run to enemy flag')
         
 
     def shutdown(self):
