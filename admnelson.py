@@ -16,6 +16,7 @@ from a_star import AStar
 import time
 
 from game_constants import gameplayDataFilepath
+from pom import ProbOccurenceMap
 
 class AdmNelson(Commander):
     """
@@ -30,6 +31,7 @@ class AdmNelson(Commander):
         self.gamedata['blockHeights'] = self.level.blockHeights
         self.gamedata['visibility_map'] = get_visibility_map(self.level.blockHeights)
         self.astar = AStar(self.gamedata['blockHeights'], self.gamedata['visibility_map'].tolist())
+        self.pom = ProbOccurenceMap(self.level.blockHeights, self.game.team, self.game.enemyTeam)
 
     def tick(self):
         """Override this function for your own bots.  Here you can access all the information in self.game,
@@ -38,6 +40,15 @@ class AdmNelson(Commander):
         #Save the game state to a pickle so that it can be used by visualize.py
         output = open(gameplayDataFilepath, "wb")
         self.gamedata['bot_positions'] = []
+        
+        #print self.level.fieldOfViewAngles
+        #print self.level.botSpawnAreas
+        #print "Enemy"
+        #print self.game.enemyTeam.members[0].position #[enemyBot.position for enemyBot in self.game.enemyTeam.members]
+        #print self.game.enemyTeam.members[0].facingDirection #[enemyBot.facingDirection for enemyBot in self.game.enemyTeam.members]
+        #print [friendBot.position for friendBot in self.game.team.members]
+
+
         for b in self.game.bots_alive:
             self.gamedata['bot_positions'].append((int(round(b.position.x)), int(round(b.position.y))))
         pickle.dump(self.gamedata, output)
@@ -52,6 +63,7 @@ class AdmNelson(Commander):
                 # otherwise run to where the flag is
                 enemyFlag = self.game.enemyTeam.flag.position
                 self.issue(orders.Charge, bot, enemyFlag, description = 'Run to enemy flag')
+        self.pom.tick()
 
     def shutdown(self):
         """Use this function to teardown your bot after the game is over, or perform an
