@@ -13,13 +13,14 @@ import numpy as np
 import time
 import cPickle as pickle
 from visibility import get_visibility_map
+from game_constants import gameplayDataFilepath
 
 class mainWindow():
     times=1
     timestart=time.clock()
 
     def __init__(self):
-        gamedata = pickle.load(open('C:/gamedata.p', 'rb'))
+        gamedata = pickle.load(open(gameplayDataFilepath, 'rb'))
         self.blockHeights = gamedata['blockHeights']
         self.visibility_map = get_visibility_map(self.blockHeights).transpose()
 
