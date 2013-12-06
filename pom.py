@@ -28,7 +28,7 @@ class ProbOccurenceMap():
         self.height = len(blockHeights[0])
         self.g = nx.empty_graph(self.width * self.height)
         self.blockHeights = blockHeights
-        self.prob = [0] * len(self.g.nodes())
+        self.prob = [0.0] * len(self.g.nodes())
         self.visibility_wave = VisibilityWave((self.width, self.height), self.isBlocked, self.setVisible)
         self.visibleNodes = []
         self.team = team
@@ -59,22 +59,22 @@ class ProbOccurenceMap():
             navigatableNodes = filter(isNavigabaleNode, neighbouringNodes)
             #print nodeId, len(navigatableNodes)
             self.g.add_edges_from([(nodeId, navigatableNode) for navigatableNode in navigatableNodes])
-
+        self.g = nx.DiGraph(self.g)
 
     def tick(self):
         def update(visibleNodes, visibleEnemyNodes):
             """ Will spread probabities around the graph """
             newProb = [1] * len(self.prob)
-            print 'len =', self.g.nodes()
-            for nodeId in self.g.nodes(): #xrange(0, self.width * self.height): #self.g.nodes():
+            #print 'len =', self.g.nodes()
+            for nodeId in self.g.nodes(): #xrange(0, self.width * self.height):
                 neighbouringNodes = self.g.neighbors(nodeId)
                 denom = 1.0 if len(neighbouringNodes) == 0 else len(neighbouringNodes)
-                neighbouringProb = (lambda_const / denom) * sum([self.prob[nodeId] for nodeId in neighbouringNodes])
+                neighbouringProb = (lambda_const / denom) * sum([self.prob[neighbouringNodeId] for neighbouringNodeId in neighbouringNodes])
                 selfProb = (1.0 - lambda_const) * self.prob[nodeId]
                 newProb[nodeId] = selfProb + neighbouringProb
-                ##newProb.append(selfProb + neighbouringProb)
+                #print nodeId, selfProb, neighbouringProb, newProb[nodeId]
             #print newProb
-            self.prob = list(newProb)
+            self.prob = newProb
             """ Updates the ProbOccurenceMap based on nodes visible by a bot """
             for nodeId in visibleNodes:
                 self.prob[nodeId] = 0.0
@@ -82,12 +82,10 @@ class ProbOccurenceMap():
                 self.prob[nodeId] = 1.0
 
         self.visibleNodes = []
-        map(self.visibility_wave.compute, [bot for bot in self.team.members if bot.state != 9]) # This call will update self.visibleNodes using a callback
+        #This call will update self.visibleNodes using a callback
+        map(self.visibility_wave.compute, [bot for bot in self.team.members if bot.state != 9])
 
-        # TODO Revaluate if last know positions or current visible position to be used for pom
-        #[enemyBot.position for enemyBot in teamBot.seenBy for teamBot in self.team.members]
-
-        visibleEnemyNodeVectors = [enemyBot.position for enemyBot in self.enemyTeam.members if enemyBot.seenlast == 0 and enemyBot.state != 9]
+        visibleEnemyNodeVectors = [enemyBot.position for enemyBot in self.enemyTeam.members if enemyBot.seenlast < 1 and enemyBot.state != 9]
         visibleEnemyNodes = [self.getNodeId(int(vec.x), int(vec.y)) for vec in visibleEnemyNodeVectors]
 
         update(self.visibleNodes, visibleEnemyNodes)
