@@ -43,25 +43,17 @@ class mainWindow():
                     
                     blocks = np.array(blocks)
                     blocks = blocks.transpose()
-                    #
                     
                     mapWidth = len(blocks)
                     mapHeight = len(blocks[0])
 
-
                     visibleNodeIds = gamedata['visibleNodes']
-                    visibleNodes = map(lambda id: ((id % mapWidth), (id / mapWidth)), visibleNodeIds)
+                    visibleNodes = [(visibleNodeId % mapHeight, visibleNodeId / mapHeight) for visibleNodeId in visibleNodeIds]
 
                     for x, y in visibleNodes:
-                        blocks[x][y] = 0.2
-
+                        blocks[y][x] = 0.2
 
                     self.im = Image.fromarray(np.uint8(cm.gist_yarg(blocks)*255))
-                    
-                    #print mapWidth, mapHeight
-                    #print probOccMap
-                    #print probOccMap.shape
-
 
                     #Set bot positions
                     for pos in gamedata['bot_positions']:
