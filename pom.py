@@ -1,9 +1,29 @@
 import networkx as nx
 from visible_view import LineOfSightVisibility, CompleteVisibility
 
-lambda_const = 0.5
+lambda_const = 0.9
 
-class ProbOccurenceMap():
+class ProbOccurenceMaps:
+
+	def __init__(self, blockHeights, enemyTeam):
+		self.enemyTeam = enemyTeam
+		self.poms = {enemyUnit.name : ProbOccurenceMap(blockHeights) for enemyUnit in enemyTeam.members}
+		self.pomLength = len(blockHeights) * len(blockHeights[0])
+
+	def tick(self, visibleNodes, visibleEnemyNodes):
+		for enemyUnit in self.enemyTeam.members:
+			pom = self.poms[enemyUnit.name]
+			if enemyUnit.seenlast == 0:
+				pom.clearProb()
+			pom.tick(visibleNodes, visibleEnemyNodes)
+
+	def getCombinedPom(self):
+		combinedPomProb = [sum([pom.prob[index] for pom in self.poms.values()]) for index in xrange(0, self.pomLength)]
+		max_val = max(combinedPomProb)
+		return [prob / max_val for prob in combinedPomProb]
+			
+
+class ProbOccurenceMap:
     """
     A class to maintain a probabilistic occurence map of the given level
     """
@@ -71,4 +91,7 @@ class ProbOccurenceMap():
             self.prob[nodeId] = 0.0
         for nodeId in visibleEnemyNodeIds:
             self.prob[nodeId] = 1.0
+
+    def clearProb(self):
+    	self.prob = [0.0] * len(self.prob)
 

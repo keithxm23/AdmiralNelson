@@ -16,7 +16,7 @@ from a_star import AStar
 import time
 
 from game_constants import gameplayDataFilepath
-from pom import ProbOccurenceMap
+from pom import ProbOccurenceMaps
 from visible_view import VisibleView
 
 class AdmNelson(Commander):
@@ -34,26 +34,24 @@ class AdmNelson(Commander):
         self.astar = AStar(self.gamedata['blockHeights'], self.gamedata['visibility_map'].tolist())
 
         self.visibleView = VisibleView(self.level.fieldOfViewAngles, self.level.blockHeights, self.game.team, self.game.enemyTeam)
-        self.pom = ProbOccurenceMap(self.level.blockHeights)
-
+        #self.pom = ProbOccurenceMap(self.level.blockHeights)
+        self.poms = ProbOccurenceMaps(self.level.blockHeights, self.game.enemyTeam)
         
         self.blockHeights = self.level.blockHeights
-        #self.poms = [ProbOccurenceMap(self.level.blockHeights, self.level.fieldOfViewAngles, self.game.team, [enemyUnit]) for enemyUnit in self.game.enemyTeam]
-        self.gamedata['probOccMap'] = self.pom.prob
+        #self.gamedata['probOccMap'] = self.pom.prob
 
     def tick(self):
         """Override this function for your own bots.  Here you can access all the information in self.game,
         which includes game information, and self.level which includes information about the level."""
 
         visibleNodes, visibleEnemyNodes = self.visibleView.tick()
-        self.pom.tick(visibleNodes, visibleEnemyNodes)
-        #for pom in self.poms:
-        #    pom.tick()
+        #self.pom.tick(visibleNodes, visibleEnemyNodes)
+        self.poms.tick(visibleNodes, visibleEnemyNodes)
 
         #Save the game state to a pickle so that it can be used by visualize.py
         output = open(gameplayDataFilepath, "wb")
         self.gamedata['bot_positions'] = []
-        self.gamedata['probOccMap'] = self.pom.prob
+        self.gamedata['probOccMap'] = self.poms.getCombinedPom()
         self.gamedata['visibleNodes'] = visibleNodes
         
         #print self.level.fieldOfViewAngles
