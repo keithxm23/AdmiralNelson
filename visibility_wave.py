@@ -1,5 +1,7 @@
 from itertools import izip
 from math import floor, copysign
+import math
+import networkx as nx
 from api.vector2 import Vector2
 
 sign = lambda x: int(copysign(1, x))
@@ -70,6 +72,69 @@ def line(A, B, finite = True):
                 x -= 1          # Step coordinate to the previous column.
             y += sy         # Go for another iteration with next Y.
 
+class VisibiltyRayCaster:
+
+    def __init__(self, (width, height), fieldOfViewAngles, isBlocked, setVisible):
+        self.width = width
+        self.height = height
+        self.fieldOfViewAngles = fieldOfViewAngles
+        self.isBlocked = isBlocked
+        self.setVisible = setVisible
+        self.borderGraph = self.generateBorderGraph(width, height)
+
+    def generateBorderGraph(self, width, height):
+        """ Precomputes a graph containing the border coordinate for the level given.
+            Meant to be used for ray casting to these points.
+        """
+        nodes = [(x, 0) for x in xrange(0, width)]
+        nodes.extend([(width - 1, y) for y in xrange(1, height)])
+        nodes.extend([(x, height - 1) for x in xrange(width - 2, -1, -1)])
+        nodes.extend([(0, y) for y in xrange(height - 2, -1, -1)])
+
+        borderGraph = nx.Graph()
+        for index in xrange(0, len(nodes) - 1):
+            borderGraph.add_edge(nodes[index], nodes[index + 1])
+        return borderGraph
+
+    def findEndpoints(self, pos, direc, viewAngle):
+        upperEndpoint, staightEndpoint, lowerEndpoint = self.findArcEndPoints(pos, direc, viewAngle)
+        endpoints = nx.shortest_path(self.borderGraph, upperEndpoint, staightEndpoint)
+        endpoints.extend(nx.shortest_path(self.borderGraph, staightEndpoint, lowerEndpoint))
+        return endpoints
+
+    def findArcEndPoints(self, pos, direc, viewAngle):
+        upperDirecVector = self.rotate(direc, viewAngle / 2.0)
+        lowerDirecVector = self.rotate(direc, -viewAngle / 2.0)
+        upperProjection = line(pos, pos + upperDirecVector, finite = False)
+        strightProjection = line(pos, pos + direc, finite = False)
+        lowerProjection = line(pos, pos + lowerDirecVector, finite = False)
+        return map(self.getLineEndpoint, [upperProjection, strightProjection, lowerProjection])
+        
+    def getLineEndpoint(self, line):
+        endpoints = set(self.borderGraph.nodes())
+        for x, y in line:
+            if (x, y) in endpoints: break
+        return (x, y)
+
+    def compute(self, botInfo):
+        pos = botInfo.position
+        direc = botInfo.facingDirection
+        viewAngle = self.fieldOfViewAngles[botInfo.state]
+
+        endpoints = self.findEndpoints(pos, direc, viewAngle)
+        
+        # Skip over alternate endpoints (approximation for faster computation)
+        for endpointX, endpointY in endpoints[::1]:
+            endpoint = Vector2(endpointX, endpointY)
+            for x, y in line(pos, endpoint, finite = True):
+                if self.isBlocked(x, y):
+                    break
+                self.setVisible(x, y)
+
+    def rotate(self, vec, angle):
+        x = (vec.x * math.cos(angle)) - (vec.y * math.sin(angle))
+        y = (vec.y * math.cos(angle)) + (vec.x * math.sin(angle))
+        return Vector2(x, y)
 
 class VisibilityWave(object):
     """

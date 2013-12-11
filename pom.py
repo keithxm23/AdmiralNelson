@@ -1,5 +1,5 @@
 import networkx as nx
-from visibility_wave import VisibilityWave
+from visibility_wave import VisibilityWave, VisibiltyRayCaster
 
 lambda_const = 0.5
 
@@ -20,7 +20,7 @@ class ProbOccurenceMap():
     def setVisible(self, x, y):
         self.visibleNodes.append(self.getNodeId(x, y))
 
-    def __init__(self, blockHeights, team, enemyTeam):
+    def __init__(self, blockHeights, fieldOfViewAngles, team, enemyTeam):
         """
         Creates an occurence graph based on navigatable nodes (nodes at height 0)
         """
@@ -29,7 +29,7 @@ class ProbOccurenceMap():
         self.g = nx.empty_graph(self.width * self.height)
         self.blockHeights = blockHeights
         self.prob = [0.0] * len(self.g.nodes())
-        self.visibility_wave = VisibilityWave((self.width, self.height), self.isBlocked, self.setVisible)
+        self.visibility_wave = VisibiltyRayCaster((self.width, self.height), fieldOfViewAngles, self.isBlocked, self.setVisible)
         self.visibleNodes = []
         self.team = team
         self.enemyTeam = enemyTeam
@@ -59,7 +59,7 @@ class ProbOccurenceMap():
             navigatableNodes = filter(isNavigabaleNode, neighbouringNodes)
             #print nodeId, len(navigatableNodes)
             self.g.add_edges_from([(nodeId, navigatableNode) for navigatableNode in navigatableNodes])
-        self.g = nx.DiGraph(self.g)
+        #self.g = nx.DiGraph(self.g)
 
     def tick(self):
         def update(visibleNodes, visibleEnemyNodes):

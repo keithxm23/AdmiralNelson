@@ -31,7 +31,7 @@ class AdmNelson(Commander):
         self.gamedata['blockHeights'] = self.level.blockHeights
         self.gamedata['visibility_map'] = get_visibility_map(self.level.blockHeights)
         self.astar = AStar(self.gamedata['blockHeights'], self.gamedata['visibility_map'].tolist())
-        self.pom = ProbOccurenceMap(self.level.blockHeights, self.game.team, self.game.enemyTeam)
+        self.pom = ProbOccurenceMap(self.level.blockHeights, self.level.fieldOfViewAngles, self.game.team, self.game.enemyTeam)
         self.gamedata['probOccMap'] = self.pom.prob
 
     def tick(self):
