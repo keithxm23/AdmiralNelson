@@ -1,5 +1,5 @@
 import networkx as nx
-from visibility_wave import VisibilityWave, VisibiltyRayCaster
+from visible_view import LineOfSightVisibility, CompleteVisibility
 
 lambda_const = 0.5
 
@@ -15,7 +15,7 @@ class ProbOccurenceMap():
         return ((nodeId % self.width), (nodeId / self.width))
 
     def isBlocked(self, x, y):
-        return True if self.blockHeights[x][y] > 0 else False
+        return True if self.blockHeights[x][y] > 1 else False
 
     def setVisible(self, x, y):
         self.visibleNodes.append(self.getNodeId(x, y))
@@ -29,7 +29,8 @@ class ProbOccurenceMap():
         self.g = nx.empty_graph(self.width * self.height)
         self.blockHeights = blockHeights
         self.prob = [0.0] * len(self.g.nodes())
-        self.visibility_wave = VisibiltyRayCaster((self.width, self.height), fieldOfViewAngles, self.isBlocked, self.setVisible)
+        self.visibility_wave = LineOfSightVisibility((self.width, self.height), fieldOfViewAngles, self.isBlocked, self.setVisible)
+        #self.visibility_wave = CompleteVisibility((self.width, self.height), fieldOfViewAngles, self.isBlocked, self.setVisible)
         self.visibleNodes = []
         self.team = team
         self.enemyTeam = enemyTeam
@@ -59,14 +60,13 @@ class ProbOccurenceMap():
             navigatableNodes = filter(isNavigabaleNode, neighbouringNodes)
             #print nodeId, len(navigatableNodes)
             self.g.add_edges_from([(nodeId, navigatableNode) for navigatableNode in navigatableNodes])
-        #self.g = nx.DiGraph(self.g)
 
     def tick(self):
         def update(visibleNodes, visibleEnemyNodes):
             """ Will spread probabities around the graph """
             newProb = [1] * len(self.prob)
             #print 'len =', self.g.nodes()
-            for nodeId in self.g.nodes(): #xrange(0, self.width * self.height):
+            for nodeId in self.g.nodes():
                 neighbouringNodes = self.g.neighbors(nodeId)
                 denom = 1.0 if len(neighbouringNodes) == 0 else len(neighbouringNodes)
                 neighbouringProb = (lambda_const / denom) * sum([self.prob[neighbouringNodeId] for neighbouringNodeId in neighbouringNodes])

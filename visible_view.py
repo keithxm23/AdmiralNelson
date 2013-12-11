@@ -6,10 +6,11 @@ from api.vector2 import Vector2
 
 sign = lambda x: int(copysign(1, x))
 
-
 def line(A, B, finite = True):
     """
-        This function is a generator that returns grid coordinates along a line
+    Modified version of Alex J. Champandard's line function
+
+    This function is a generator that returns grid coordinates along a line
     between points A and B.  It uses a floating-point version of the Bresenham
     algorithm, which is designed to be sub-pixel accurate rather than assuming
     the middle of each pixel.  This could most likely be optimized further using
@@ -30,24 +31,19 @@ def line(A, B, finite = True):
 
         while True:
             yield (x, y)
-        
             if finite and x == int(floor(B.x)):
                 break
-
             p = e           # Store current error for reference.
             e += sy         # Accumulate error from slope.
-
             if e >= 1.0:    # Reached the next row yet?
                 e -= 1.0        # Re-adjust the error accordingly.
                 y += 1          # Step the coordinate to next row.
             elif e < 0.0:   # Reached the previous row?
                 e += 1.0        # Re-adjust error accordingly.
                 y -= 1          # Step the coordinate to previous row.
-
             x += sx         # Take then next step with x.
 
     else: # abs(d.x) < abs(d.y)
-
         sx = d.x / abs(d.y)     # Slope along Y that was chosen.
         sy = sign(d.y)          # Step in the correct X direction.
 
@@ -57,10 +53,8 @@ def line(A, B, finite = True):
  
         while True:
             yield (x, y)
-
             if finite and y == int(floor(B.y)):
                 break
-
             p = e           # Store current error for reference.
             e += sx         # Accumulate error from slope.
 
@@ -72,8 +66,11 @@ def line(A, B, finite = True):
                 x -= 1          # Step coordinate to the previous column.
             y += sy         # Go for another iteration with next Y.
 
-class VisibiltyRayCaster:
-
+class LineOfSightVisibility:
+    """
+    Class to compute what is visible from a bots perspective based on position, direction
+    and field of view
+    """
     def __init__(self, (width, height), fieldOfViewAngles, isBlocked, setVisible):
         self.width = width
         self.height = height
@@ -109,6 +106,13 @@ class VisibiltyRayCaster:
         strightProjection = line(pos, pos + direc, finite = False)
         lowerProjection = line(pos, pos + lowerDirecVector, finite = False)
         return map(self.getLineEndpoint, [upperProjection, strightProjection, lowerProjection])
+
+    def rotate(self, vec, angle):
+        cos = math.cos(angle)
+        sin = math.sin(angle)
+        x = (vec.x * cos) - (vec.y * sin)
+        y = (vec.y * cos) + (vec.x * sin)
+        return Vector2(x, y)
         
     def getLineEndpoint(self, line):
         endpoints = set(self.borderGraph.nodes())
@@ -120,32 +124,29 @@ class VisibiltyRayCaster:
         pos = botInfo.position
         direc = botInfo.facingDirection
         viewAngle = self.fieldOfViewAngles[botInfo.state]
-
         endpoints = self.findEndpoints(pos, direc, viewAngle)
         
-        # Skip over alternate endpoints (approximation for faster computation)
-        for endpointX, endpointY in endpoints[::1]:
+        for endpointX, endpointY in endpoints:
             endpoint = Vector2(endpointX, endpointY)
             for x, y in line(pos, endpoint, finite = True):
                 if self.isBlocked(x, y):
                     break
                 self.setVisible(x, y)
 
-    def rotate(self, vec, angle):
-        x = (vec.x * math.cos(angle)) - (vec.y * math.sin(angle))
-        y = (vec.y * math.cos(angle)) + (vec.x * math.sin(angle))
-        return Vector2(x, y)
-
-class VisibilityWave(object):
+class CompleteVisibility(object):
     """
-        Visibility "wave" helper that can calculate all visible cells from a
+    Provides 360 degrees visibility for each bot.
+
+    Modified version of Alex J. Champandard's visibilityWave
+
+    Can calculate all visible cells from a
     single cell.  It starts from a specified point and "flood fills" cells that
     are visible in four different directions.  Each direction of the visibility
     wave is bounded by two lines, which are then rasterized in between.  If
     obstacles are encountered, the wave is split into sub-waves as necessary.
     """
 
-    def __init__(self, (width, height), isBlocked, setVisible):
+    def __init__(self, (width, height), fieldOfViewAngles, isBlocked, setVisible):
         self.width = width
         self.height = height
         self.isBlocked = isBlocked
