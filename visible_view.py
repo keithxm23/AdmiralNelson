@@ -66,6 +66,32 @@ def line(A, B, finite = True):
                 x -= 1          # Step coordinate to the previous column.
             y += sy         # Go for another iteration with next Y.
 
+class VisibleView:
+
+    def isBlocked(self, x, y):
+        return True if self.blockHeights[x][y] > 1 else False
+
+    def setVisible(self, x, y):
+        self.visibleNodes.append((x, y))
+
+    def __init__(self, fieldOfViewAngles, blockHeights, team, enemyTeam):
+        width = len(blockHeights)
+        height = len(blockHeights[0])
+        self.blockHeights = blockHeights
+        self.visibleNodes = []
+        self.team = team
+        self.enemyTeam = enemyTeam
+        self.visibility_view = LineOfSightVisibility((width, height), fieldOfViewAngles, self.isBlocked, self.setVisible)
+
+    def tick(self):
+        self.visibleNodes = []
+        #This call will update self.visibleNodes using a callback
+        map(self.visibility_view.compute, [bot for bot in self.team.members if bot.state != 9])
+        visibleEnemyNodes = [(enemyBot.position.x, enemyBot.position.y) for enemyBot in self.enemyTeam.members if enemyBot.seenlast < 1 and enemyBot.state != 9]
+        return (self.visibleNodes, visibleEnemyNodes)
+
+
+
 class LineOfSightVisibility:
     """
     Class to compute what is visible from a bots perspective based on position, direction

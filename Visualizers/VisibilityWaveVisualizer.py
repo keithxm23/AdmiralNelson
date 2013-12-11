@@ -47,8 +47,7 @@ class mainWindow():
                     mapWidth = len(blocks)
                     mapHeight = len(blocks[0])
 
-                    visibleNodeIds = gamedata['visibleNodes']
-                    visibleNodes = [(visibleNodeId % mapHeight, visibleNodeId / mapHeight) for visibleNodeId in visibleNodeIds]
+                    visibleNodes = gamedata['visibleNodes']
 
                     for x, y in visibleNodes:
                         blocks[y][x] = 0.2
