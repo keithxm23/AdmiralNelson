@@ -1,3 +1,4 @@
 *.png
 *.pyc
 game_constants.py
+.idea

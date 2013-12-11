@@ -19,6 +19,10 @@ from game_constants import gameplayDataFilepath
 from pom import ProbOccurenceMaps
 from visible_view import VisibleView
 
+from state_machine import *
+from bot_states import *
+import numpy as np
+
 class AdmNelson(Commander):
     """
     Rename and modify this class to create your own commander and add mycmd.Placeholder
@@ -40,6 +44,29 @@ class AdmNelson(Commander):
         self.blockHeights = self.level.blockHeights
         #self.gamedata['probOccMap'] = self.pom.prob
 
+        self.attacker = None
+        self.defender = None
+        self.verbose = True
+
+        # Calculate flag positions and store the middle.
+        ours = self.game.team.flag.position
+        theirs = self.game.enemyTeam.flag.position
+        self.middle = (theirs + ours) * 0.5
+
+        # Now figure out the flaking directions, assumed perpendicular.
+        d = (ours - theirs)
+        self.left = Vector2(-d.y, d.x).normalized()
+        self.right = Vector2(d.y, -d.x).normalized()
+        self.front = Vector2(d.x, d.y).normalized()
+
+        self.panicMode = False
+
+        self.bot_states = dict([(bot.name, BotStateIdle()) for bot in self.game.team.members])
+
+        self.attacker = None
+        self.defender = None
+
+
     def tick(self):
         """Override this function for your own bots.  Here you can access all the information in self.game,
         which includes game information, and self.level which includes information about the level."""
@@ -53,34 +80,119 @@ class AdmNelson(Commander):
         self.gamedata['bot_positions'] = []
         self.gamedata['probOccMap'] = self.poms.getCombinedPom()
         self.gamedata['visibleNodes'] = visibleNodes
-        
-        #print self.level.fieldOfViewAngles
-        #print self.level.botSpawnAreas
-        #print "Enemy"
-        #print self.game.enemyTeam.members[0].position #[enemyBot.position for enemyBot in self.game.enemyTeam.members]
-        #print self.game.enemyTeam.members[0].facingDirection #[enemyBot.facingDirection for enemyBot in self.game.enemyTeam.members]
-        #print [friendBot.position for friendBot in self.game.team.members]
-
-
+        pom = self.gamedata['probOccMap']
         for b in self.game.bots_alive:
             self.gamedata['bot_positions'].append((int(round(b.position.x)), int(round(b.position.y))))
         pickle.dump(self.gamedata, output)
 
-        # for all bots which aren't currently doing anything
+
+        """
+        Start commander
+        """
+        # print len(pom)
+        self.twodpom = np.array(pom).reshape(self.level.width,self.level.height).tolist()
+
+
+
         for bot in self.game.bots_available:
-            if bot.flag:
-                # if a bot has the flag run to the scoring location
-                flagScoreLocation = self.game.team.flagScoreLocation
-                self.issue(orders.Charge, bot, flagScoreLocation, description = 'Run to score location')
+            self.bot_states[bot.name] = BotStateIdle()
+
+
+        if self.attacker and self.attacker.health <= 0:
+            # the attacker is dead we'll pick another when available
+            self.attacker = None
+
+        if self.defender and (self.defender.health <= 0 or self.defender.flag):
+            # the defender is dead we'll pick another when available
+            #pass
+            self.defender = None
+
+        if not self.game.team.flag.carrier: # If flag is being carried by team
+            self.panicMode = False # Don't panic
+        else:
+            if not self.panicMode: # Else if not already in panic-mode,
+                self.panicMode = True # Start panicking!
+
+                targetPosition = (self.game.team.flag.position + self.game.enemyTeam.flagScoreLocation) * 0.5
+                targetMin = targetPosition - Vector2(6.0, 6.0)
+                targetMax = targetPosition + Vector2(6.0, 6.0)
+                goal = self.level.findRandomFreePositionInBox([targetMin, targetMax])
+
+                if goal:
+                    #Send all bots that are alive to intercept the flag
+                    for bot in self.game.bots_alive:
+                        if bot == self.defender or bot == self.attacker:
+                            continue
+
+                        self.bot_states[bot.name] = BotStateInterceptFlag()
+                        order_args, order_keyargs = self.bot_states[bot.name].get_order(self, bot)
+                        if not order_args:
+                            continue
+                        else:
+                            self.issue(*order_args, **order_keyargs)
+
+        # In this example we loop through all living bots without orders (self.game.bots_available)
+        # All other bots will wander randomly
+
+
+        for bot in self.game.bots_available:
+
+            # If no defender, set a defender
+            if (self.defender == None or self.defender == bot) and not bot.flag:
+                self.defender = bot
+
+                self.bot_states[bot.name] = BotStateDefend()
+                order_args, order_keyargs = self.bot_states[bot.name].get_order(self, bot)
+                if not order_args:
+                    continue
+                else:
+                    self.issue(*order_args, **order_keyargs)
+
+
+
+            # If no attacker, set an attacker
+            elif self.attacker == None or self.attacker == bot or bot.flag:
+                self.attacker = bot
+
+                self.bot_states[bot.name] = BotStateAttackFlag()
+                order_args, order_keyargs = self.bot_states[bot.name].get_order(self, bot)
+                if not order_args:
+                    continue
+                else:
+                    self.issue(*order_args, **order_keyargs)
             else:
-                # otherwise run to where the flag is
-                enemyFlag = self.game.enemyTeam.flag.position
-                self.issue(orders.Charge, bot, enemyFlag, description = 'Run to enemy flag')
-        
+                # All our other (random) bots
 
-    def shutdown(self):
-        """Use this function to teardown your bot after the game is over, or perform an
-        analysis of the data accumulated during the game."""
+                # pick a random position in the level to move to
+                self.bot_states[bot.name] = BotStateRandomPatrol()
+                order_args, order_keyargs = self.bot_states[bot.name].get_order(self, bot)
+                if not order_args:
+                    continue
+                else:
+                    self.issue(*order_args, **order_keyargs)
 
-        pass
+        for bot in self.game.bots_holding:
+            self.bot_states[bot.name] = BotStateAttackBot()
+            order_args, order_keyargs = self.bot_states[bot.name].get_order(self, bot)
+            if not order_args:
+                continue
+            else:
+                self.issue(*order_args, **order_keyargs)
+
+
+
+
+    def getFlankingPosition(self, bot, target):
+        """Return simple flanking positions calculated based on the flanking vectors.
+
+        Args:
+            bot (object): The bot for which to calculate the flanking position.
+            target (vector2): The location that should be flanked.
+
+        Returns:
+            The calculated flanking position as a vector2 object.
+        """
+        flanks = [target + f * 16.0 for f in [self.left, self.right]]
+        options = map(lambda f: self.level.findNearestFreePosition(f), flanks)
+        return sorted(options, key = lambda p: (bot.position - p).length())[0]
 

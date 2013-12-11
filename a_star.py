@@ -60,6 +60,7 @@ class AStar(object):
         @param y cell y coordinate
         @returns cell
         """
+        # print x, y, x * self.gridHeight + y
         return self.cells[x * self.gridHeight + y]
 
 
@@ -121,6 +122,11 @@ class AStar(object):
 
 
     def get_path(self, startx, starty, endx, endy):
+        startx = int(startx)
+        starty = int(starty)
+        endx = int(endx)
+        endy = int(endy)
+
         path = []
         if startx == endx and starty == endy:
             return path
@@ -162,9 +168,9 @@ class AStar(object):
         return path
 
 
-import cPickle as pickle
-from visibility import get_visibility_map
-gamedata = pickle.load(open(gameplayDataFilepath, 'rb'))
-blockHeights = gamedata['blockHeights']
-vis_map = get_visibility_map(blockHeights)
-astar = AStar(blockHeights, vis_map.tolist())
+# import cPickle as pickle
+# from visibility import get_visibility_map
+# gamedata = pickle.load(open(gameplayDataFilepath, 'rb'))
+# blockHeights = gamedata['blockHeights']
+# vis_map = get_visibility_map(blockHeights)
+# astar = AStar(blockHeights, vis_map.tolist())
