@@ -1,5 +1,6 @@
 import networkx as nx
 from visible_view import LineOfSightVisibility, CompleteVisibility
+import numpy as np
 
 lambda_const = 0.9
 
@@ -15,12 +16,13 @@ class ProbOccurenceMaps:
 			pom = self.poms[enemyUnit.name]
 			if enemyUnit.seenlast == 0:
 				pom.clearProb()
+			#for i in xrange(0, 5):
 			pom.tick(visibleNodes, visibleEnemyNodes)
 
 	def getCombinedPom(self):
-		combinedPomProb = [sum([pom.prob[index] for pom in self.poms.values()]) for index in xrange(0, self.pomLength)]
+		combinedPomProb = sum([pom.prob for pom in self.poms.values()])
 		max_val = max(combinedPomProb)
-		return [prob / max_val for prob in combinedPomProb]
+		return np.multiply(combinedPomProb, 1.0 / max_val)
 			
 
 class ProbOccurenceMap:
@@ -42,7 +44,7 @@ class ProbOccurenceMap:
         self.height = len(blockHeights[0])
         self.g = nx.empty_graph(self.width * self.height)
         self.blockHeights = blockHeights
-        self.prob = [0.0] * len(self.g.nodes())
+        self.prob = np.zeros(len(self.g.nodes())) #[0.0] * len(self.g.nodes())
 
         def isNavigabaleNode(nodeId):
             """ Returns false if a block is present else returns true """
@@ -71,11 +73,11 @@ class ProbOccurenceMap:
             self.g.add_edges_from([(nodeId, navigatableNode) for navigatableNode in navigatableNodes])
 
     def tick(self, visibleNodes, visibleEnemyNodes):
-    	visibleNodeIds = [self.getNodeId(int(x), int(y)) for x, y in visibleNodes]
-    	visibleEnemyNodeIds = [self.getNodeId(int(x), int(y)) for x, y in visibleEnemyNodes]
+    	visibleNodeIds = set([self.getNodeId(int(x), int(y)) for x, y in visibleNodes])
+    	visibleEnemyNodeIds = set([self.getNodeId(int(x), int(y)) for x, y in visibleEnemyNodes])
 
         """ Will spread probabities around the graph """
-        newProb = [0.0] * len(self.prob)
+        newProb = np.zeros(len(self.prob))#[0.0] * len(self.prob)
         #print 'len =', self.g.nodes()
         for nodeId in self.g.nodes():
             neighbouringNodes = self.g.neighbors(nodeId)
@@ -93,5 +95,5 @@ class ProbOccurenceMap:
             self.prob[nodeId] = 1.0
 
     def clearProb(self):
-    	self.prob = [0.0] * len(self.prob)
+    	self.prob = np.zeros(len(self.prob))
 

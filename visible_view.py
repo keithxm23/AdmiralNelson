@@ -87,7 +87,7 @@ class VisibleView:
         self.visibleNodes = []
         #This call will update self.visibleNodes using a callback
         map(self.visibility_view.compute, [bot for bot in self.team.members if bot.state != 9])
-        visibleEnemyNodes = [(enemyBot.position.x, enemyBot.position.y) for enemyBot in self.enemyTeam.members if enemyBot.seenlast < 1 and enemyBot.state != 9]
+        visibleEnemyNodes = [(enemyBot.position.x, enemyBot.position.y) for enemyBot in self.enemyTeam.members if enemyBot.seenlast < 0.2 and enemyBot.state != 9]
         return (self.visibleNodes, visibleEnemyNodes)
 
 

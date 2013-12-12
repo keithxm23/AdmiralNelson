@@ -1,1 +1,1 @@
-gameplayDataFilepath = "C:/gamedata.p"
+gameplayDataFilepath = '/tmp/GameplayData/gamedata.p'
